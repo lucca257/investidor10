@@ -3,14 +3,20 @@
 use App\Domains\Category\Models\Category;
 use App\Domains\Post\Models\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 
 uses(RefreshDatabase::class);
 
 it('should list posts', function () {
     $posts = Post::factory(10)->create();
+
+    expect(Cache::has("post-page-1"))->toBeFalse();
+
     $this->getJson(route('posts.index'))
         ->assertOk()
         ->assertJsonCount($posts->count(), 'data');
+
+    expect(Cache::has("post-page-1"))->toBeTrue();
 });
 
 it('should list details from post', function () {
@@ -30,16 +36,20 @@ it('should validate request fields on create post', function () {
         ->assertJsonValidationErrors(['title', 'body', 'categories']);
 });
 
-it('should create post with categories that not exists', function () {
+it('should create post', function () {
+    $category = Category::factory()->create();
     $postCreateDataMock = [
         'title' => 'any title',
         'body' => 'any body example',
         'categories' => [
             'category1',
             'category2',
-            'category3',
+            $category->title,
         ],
     ];
+
+    Cache::put("post-page-1", []);
+
     $this->postJson(route('posts.store', $postCreateDataMock))->assertOk();
 
     $this->assertDatabaseHas('posts', [
@@ -52,22 +62,6 @@ it('should create post with categories that not exists', function () {
             'title' => $category
         ]);
     }
-});
-
-it('should create post with categories that exists', function () {
-    $categories = Category::factory(2)->create();
-    $postCreateDataMock = [
-        'title' => 'any title',
-        'body' => 'any body example',
-        'categories' => $categories->pluck('title')->toArray()
-    ];
-
-    $this->postJson(route('posts.store', $postCreateDataMock))->assertOk();
-
-    $this->assertDatabaseHas('posts', [
-        'title' => $postCreateDataMock['title'],
-        'body' => $postCreateDataMock['body'],
-    ]);
-
-    $this->assertDatabaseCount('categories', 2);
+    $this->assertDatabaseCount('categories', 3);
+    expect(Cache::has("post-page-1"))->toBeFalse();
 });

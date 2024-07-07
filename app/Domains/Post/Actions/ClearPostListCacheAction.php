@@ -9,7 +9,7 @@ class ClearPostListCacheAction
     public function execute(): void
     {
         for ($page = 1; $page <= 100; $page++) {
-            $key = "ost-page-$page";
+            $key = "post-page-$page";
             if (Cache::has($key)) {
                 Cache::forget($key);
             } else {
