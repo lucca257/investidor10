@@ -10,13 +10,13 @@ uses(RefreshDatabase::class);
 it('should list posts', function () {
     $posts = Post::factory(10)->create();
 
-    expect(Cache::has("post-page-1"))->toBeFalse();
+    expect(Cache::has('post-page-1'))->toBeFalse();
 
     $this->getJson(route('posts.index'))
         ->assertOk()
         ->assertJsonCount($posts->count(), 'data');
 
-    expect(Cache::has("post-page-1"))->toBeTrue();
+    expect(Cache::has('post-page-1'))->toBeTrue();
 });
 
 it('should list details from post', function () {
@@ -48,7 +48,7 @@ it('should create post', function () {
         ],
     ];
 
-    Cache::put("post-page-1", []);
+    Cache::put('post-page-1', []);
 
     $this->postJson(route('posts.store', $postCreateDataMock))->assertOk();
 
@@ -59,9 +59,9 @@ it('should create post', function () {
 
     foreach ($postCreateDataMock['categories'] as $category) {
         $this->assertDatabaseHas('categories', [
-            'title' => $category
+            'title' => $category,
         ]);
     }
     $this->assertDatabaseCount('categories', 3);
-    expect(Cache::has("post-page-1"))->toBeFalse();
+    expect(Cache::has('post-page-1'))->toBeFalse();
 });

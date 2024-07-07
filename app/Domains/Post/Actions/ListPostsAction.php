@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Cache;
 class ListPostsAction
 {
     /**
-     * @param  int  $page
      * @return mixed
      */
     public function execute(int $page)

@@ -19,12 +19,14 @@ class PostController extends Controller
     public function show(Post $post): JsonResponse
     {
         $post->load('categories');
+
         return response()->json($post);
     }
 
     public function store(StorePostValidator $request)
     {
         app(CreatePostAction::class)->execute($request->toDTO());
+
         return response()->json();
     }
 }

@@ -14,7 +14,7 @@ class PostFactory extends Factory
     {
         return [
             'title' => fake()->name(),
-            'body' => fake()->realText()
+            'body' => fake()->realText(),
         ];
     }
 
