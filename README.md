@@ -1,4 +1,5 @@
 ## Important
+[screen-capture.webm](https://github.com/lucca257/investidor10/assets/31326015/9ea6bfb7-4b90-4de7-91a1-26c8b75a22fa)
 
 ## Desenvolvido em:
 
