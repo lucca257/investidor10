@@ -194,7 +194,7 @@
                     </svg>
                     <strong>Blog</strong>
                 </a>
-                <button @click="handleReadPost(null) && fetchPosts" class="navbar-toggler">Mostrar notícias</button>
+                <button @click="fetchPosts() && handleReadPost(null)" class="navbar-toggler">Mostrar notícias</button>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader"
                         aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
                     Cadastrar notícia
