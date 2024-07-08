@@ -8,8 +8,9 @@ use App\Domains\Post\Actions\ListPostsAction;
 use App\Domains\Post\Models\Post;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use function request;
 
-class PostController extends Controller
+class PostApiController extends Controller
 {
     public function index()
     {
@@ -25,8 +26,23 @@ class PostController extends Controller
 
     public function store(StorePostValidator $request)
     {
+
         app(CreatePostAction::class)->execute($request->toDTO());
 
         return response()->json();
+    }
+
+    public function search()
+    {
+        $searchTerm = request('search');
+        return Post::whereLike('title', "%$searchTerm%")
+            ->orWhereLike('body', "%$searchTerm%")
+            ->orWhere()
+//            ->whenEmpty(function ($posts) use ($searchTerm) {
+//                return Post::whereHas('category', function ($q) use ($searchTerm) {
+//                    $q->whereLike('title', "%{$searchTerm}%");
+//                })->get();
+//            })
+            ->paginate();
     }
 }

@@ -22,6 +22,9 @@ class StorePostValidator extends FormRequest
         $dto = new PostDto(...$this->validated());
         $dto->categories = [];
         foreach ($this->categories as $title) {
+            if (!$title) {
+                continue;
+            }
             $dto->categories[] = new CategoryDto($title);
         }
 

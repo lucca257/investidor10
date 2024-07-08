@@ -14,7 +14,7 @@ it('should list posts', function () {
 
     $this->getJson(route('posts.index'))
         ->assertOk()
-        ->assertJsonCount($posts->count(), 'data');
+        ->assertJsonCount($posts->count() - 1, 'data');
 
     expect(Cache::has('post-page-1'))->toBeTrue();
 });

@@ -12,8 +12,8 @@ class ListPostsAction
      */
     public function execute(int $page)
     {
-        return Cache::remember("post-page-$page", 60 * 5, function () {
-            return Post::paginate();
+        return Cache::remember("post-page-$page", 60, function () {
+            return Post::orderBy('updated_at', 'DESC')->paginate(9);
         });
     }
 }
