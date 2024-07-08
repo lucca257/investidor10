@@ -191,7 +191,7 @@
                     </svg>
                     <strong>Blog</strong>
                 </a>
-                <a href="#" class="navbar-toggler">Mostrar notícias</a>
+                <button @click="handleReadPost(null) && fetchPosts" class="navbar-toggler">Mostrar notícias</button>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader"
                         aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
                     Cadastrar notícia
@@ -205,28 +205,50 @@
             <p>Carregando...</p>
         </div>
         <div v-else class="album py-5 bg-body-tertiary">
-            <div class="container">
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-                    <div class="col" v-for="post in posts" :key="post.id">
-                        <post-card :post="post"></post-card>
+            <div class="container" v-if="postDetails">
+                <h1>@{{ postDetails.title }}</h1>
+                <p class="text-muted">Última atualização: @{{ postDetails.updated_at }}</p>
+                <div v-html="postDetails.body"></div>
+                <div class="mt-4">
+                    <strong>Categorias:</strong>
+                    <ul>
+                        <li v-for="category in postDetails.categories" :key="category.id">@{{ category.title }}</li>
+                    </ul>
+                </div>
+                <button class="btn btn-primary mt-3" @click="handleReadPost(null)">Voltar</button>
+            </div>
+            <div v-else>
+                <div class="container">
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                        <div class="col" v-for="post in posts" :key="post.id">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">@{{ post.title }}</h5>
+                                    <p class="card-text">@{{ post.body }}</p>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            @click="handleReadPost(post)">Ler artigo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="container d-flex justify-content-center mt-5">
-                <nav aria-label="Page navigation example">
-                    <ul class="pagination">
-                        <li class="page-item" :class="{ 'disabled': currentPage === 1 }">
-                            <button class="page-link" @click.prevent="fetchPosts(currentPage - 1)">Anterior</button>
-                        </li>
-                        <li class="page-item" v-for="page in totalPages" :key="page"
-                            :class="{ 'active': page === currentPage }">
-                            <button class="page-link" @click.prevent="fetchPosts(page)">@{{ page }}</button>
-                        </li>
-                        <li class="page-item" :class="{ 'disabled': currentPage === totalPages }">
-                            <button class="page-link" @click.prevent="fetchPosts(currentPage + 1)">Próximo</button>
-                        </li>
-                    </ul>
-                </nav>
+                <div class="container d-flex justify-content-center mt-5">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+                            <li class="page-item" :class="{ 'disabled': currentPage === 1 }">
+                                <button class="page-link" @click.prevent="fetchPosts(currentPage - 1)">Anterior</button>
+                            </li>
+                            <li class="page-item" v-for="page in totalPages" :key="page"
+                                :class="{ 'active': page === currentPage }">
+                                <button class="page-link" @click.prevent="fetchPosts(page)">@{{ page }}</button>
+                            </li>
+                            <li class="page-item" :class="{ 'disabled': currentPage === totalPages }">
+                                <button class="page-link" @click.prevent="fetchPosts(currentPage + 1)">Próximo</button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </main>
@@ -246,48 +268,27 @@
 </body>
 </html>
 
-
 <!-- Vue.js Instance -->
 <script>
-    Vue.component('post-card', {
-        template: `
-            <div class="card shadow-sm">
-                <svg class="bd-placeholder-img card-img-top" width="100%" height="75"
-                     xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail"
-                     preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title>
-                    <rect width="100%" height="100%" fill="#55595c"></rect>
-                    <text x="50%" y="50%" fill="#eceeef" dy=".3em">@{{ post.title }}</text>
-                </svg>
-                <div class="card-body">
-                    <p class="card-text">@{{ post.body }}</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-sm btn-outline-secondary">Ler artigo</button>
-                    </div>
-                </div>
-            </div>
-        `,
-        props: {
-            post: {
-                type: Object,
-                required: true
-            }
-        }
-    });
     new Vue({
         el: '#app',
         data: {
+            modalOpen: false,
+            postDetails: null,
             posts: [],
             categories: [],
-            currentPage: 2,
+            currentPage: 1,
             totalPages: 0,
-            loading: true,
+            loading: false,
             newPost: {
                 title: '',
                 body: '',
-                categories: '',
+                categories: [],
+                newCategory: ''
             }
         },
         mounted() {
+            // Fetch initial data
             this.fetchPosts(this.currentPage);
             this.fetchCategories();
         },
@@ -323,25 +324,30 @@
                     body: this.newPost.body,
                     categories: [...this.newPost.categories, this.newPost.newCategory]
                 };
-                
+
                 fetch('api/posts', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)
-                }).then(data => {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Notícia cadastrada, carregand",
-                        showConfirmButton: false,
-                        timer: 1500
+                }).then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            position: "top-end",
+                            icon: "success",
+                            title: "Notícia cadastrada com sucesso!",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        this.fetchCategories();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching categories:', error);
                     });
-                    this.fetchCategories();
-                }).catch(error => {
-                    console.error('Error fetching categories:', error);
-                });
+            },
+            handleReadPost(post) {
+                this.postDetails = post;
             }
         }
     });

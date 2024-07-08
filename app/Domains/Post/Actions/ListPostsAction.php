@@ -13,7 +13,7 @@ class ListPostsAction
     public function execute(int $page)
     {
         return Cache::remember("post-page-$page", 60, function () {
-            return Post::orderBy('updated_at', 'DESC')->paginate(9);
+            return Post::orderBy('updated_at', 'DESC')->with('categories')->paginate(9);
         });
     }
 }
